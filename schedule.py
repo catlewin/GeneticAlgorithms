@@ -6,31 +6,23 @@ class Gene:
         self.time = time
         self.room = room
         self.facilitator = facilitator
+        self.fitness = 0.0
 
 # check
-my_gene = Gene('201A', '10AM', 'Beach201', 'Shaw')
-print(my_gene.time)
+gene1 = Gene('201A', '10AM', 'Beach201', 'Shaw')
+gene2 = Gene('201B', '10AM', 'Beach201', 'Shaw')
+print(gene1.activity)
 
 class Schedule:
     def __init__(self):
         # always in this order
-        self.genes = {"SLA101A": [],
-                      "SLA101B": [],
-                      "SLA191A": [],
-                      "SLA191B": [],
-                      "SLA201": [],
-                      "SLA291": [],
-                      "SLA303": [],
-                      "SLA304": [],
-                      "SLA394": [],
-                      "SLA449": [],
-                      "SLA451": []
-                      }
+        self.genes = []
 
     def add_gene(self, gene):
-        self.genes.update({gene.activity: [gene.time, gene.room, gene.facilitator]})
+        self.genes.append(gene)
 
 # check
 my_schedule = Schedule()
-my_schedule.add_gene(my_gene)
-print(my_schedule.genes[my_gene.activity])
+my_schedule.add_gene(gene1)
+my_schedule.add_gene(gene2)
+print(my_schedule.genes[0].activity, my_schedule.genes[1].activity)

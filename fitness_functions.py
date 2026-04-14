@@ -1,5 +1,5 @@
 # file for all fitness functions, with an additional function to call all fitness functions
-# import Class from classes
+from schedule import Schedule, Gene
 import string
 
 '''Fitness function:
@@ -28,7 +28,20 @@ import string
 # treating a schedule as a list of gene classes
 
 # Activity is scheduled at the same time in the same room as another of the activities: -0.5
-# def check_room_overlap(schedule):
-#
-#     for gene in schedule:
-#         if gene.room == s
+def check_room_overlap(schedule):
+    for geneA in schedule.genes:
+        for geneB in schedule.genes:
+            if geneA.room == geneB.room:
+                if geneA.time == geneB.time:
+                    geneA.fitness = -0.5
+
+
+# check change occurs for fitness
+gene1 = Gene('201A', '10AM', 'Beach201', 'Shaw')
+gene2 = Gene('201B', '10AM', 'Beach201', 'Shaw')
+my_schedule = Schedule()
+my_schedule.add_gene(gene1)
+my_schedule.add_gene(gene2)
+print(my_schedule.genes[0].fitness, my_schedule.genes[1].fitness)
+check_room_overlap(my_schedule)
+print(my_schedule.genes[0].fitness, my_schedule.genes[1].fitness)
