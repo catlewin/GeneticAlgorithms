@@ -1,1 +1,1 @@
-![Genetic Algorithm Project.jpg](Genetic Algorithm Project.jpg)
+![Genetic Algorithm Project.jpg](GeneticAlgorithmProject.jpg)
