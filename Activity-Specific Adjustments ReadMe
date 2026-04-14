@@ -1,0 +1,72 @@
+Activity-Specific Adjustments: CS 461 Program 2 (Genetic Algorithm Scheduler)
+What This Module Does
+This module implements the cross-activity fitness rules from Appendix A of the assignment. These are the rules that compare SLA 101 and SLA 191 sections against each other; they can't be scored by looking at one activity in isolation.
+The main fitness function only needs to call activity_specific_score(schedule) once per schedule to get the bonus/penalty from these rules.
+Where This Fits in the Program
+The overall fitness of a schedule is:
+total_fitness = sum(per_activity_scores) + activity_specific_score(schedule)
+
+This module handles:
+SLA 101 section A vs B time separation
+SLA 191 section A vs B time separation
+SLA 101 <-> SLA 191 consecutive / same-slot / 1-hour-gap rules
+Roman/Beach building-separation penalty for consecutive 101<->191 pairs
+
+
+
+
+How It Works With the Code
+The function works with our Gene and Schedule  classes. It looks up the four relevant activities by name ("101 A","101 B", "191 A", "191 B"), so gene order in the schedule doesn't matter.
+Expected Gene attributes used:
+gene.activity → string like "101 A", "191 B", etc.
+gene.time  → string like "10:00 AM", "11:00 AM", "12:00 PM", etc.
+gene.room  → string like "Beach 201", "Roman 216", etc.
+The function does not use gene.facilitator or gene.fitness since no activity-specific rule depends on who is teaching.
+The time strings must match exactly what's in the TIME_TO_HOUR dictionary in the code. Our CSVs use "10:00 AM" format, so that's what the function expects.
+Code Walkthrough
+Constants:
+TIME_TO_HOUR  maps time strings like "10:00 AM" to numeric hours like 10 used for gap math
+Helper Functions:
+is_roman_or_beach(room_name)returns True if the room is in the Roman or Beach building, used for the building-separation penalty
+hour_gap(time_a, time_b)converts two time strings to hours and returns the absolute difference
+find_gene(genes, activity_name)searches the gene list for a gene with a matching activity name
+Main Function activity_specific_score(schedule):
+Finds the four relevant genes by activity name (101 A, 101 B, 191 A, 191 B)
+If any of the four are missing, returns 0.0 safely
+Checks the SLA 101 section gap  rewards if >4 hours apart, penalizes if same slot
+Checks the SLA 191 section gap with same logic
+Loops through all four 101<->191 cross-pairs and scores each based on whether they are consecutive, 2 hours apart, or in the same slot
+For consecutive pairs, checks if one room is in Roman/Beach and the other is not. If so, applies the building-separation penalty
+Returns the total bonus/penalty as a single float
+
+Test
+The test at the bottom of the file only runs if you execute the file directly 
+It creates a fake schedule using our Gene and Schedule classes where the first four activities are strategically placed to trigger multiple rules at once
+It calls activity_specific_score() on that schedule to get the real result
+Shows a step-by-step breakdown of each rule check
+The expected result is 0.7:
++0.5 (101 sections far apart)
++0.0 (191 sections neutral)
++0.1 (101A<->191A consecutive with building penalty)
++0.0 (101A<->191B too far apart)
++0.0 (101B<->191A too far apart)
++0.1 (101B<->191B consecutive with building penalty)
+Usage
+from activity_adjustments import activity_specific_score
+# inside the main fitness function:
+def fitness(schedule):
+    score = 0.0
+    # ... per-activity scoring loop (room size, facilitator, conflicts) ...
+
+    # add cross-activity adjustments
+    score += activity_specific_score(schedule)
+    return score
+
+This module does NOT handle:
+Room double-booking
+Room size fit
+Facilitator preference scoring
+Facilitator time conflicts
+Facilitator total load
+Facilitator consecutive-slot penalties
+
