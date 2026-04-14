@@ -1,0 +1,50 @@
+Class,Expected Enrollement,Preferred,Other
+101 A,40,Glen,Numen
+,,Beck,Richards
+,,Banks,Shaw
+,,,Singer
+,,,
+101 B,35,Glen,Numen
+,,Beck,Richards
+,,Banks,Shaw
+,,,Singer
+,,,
+191 A,45,Glen,Numen
+,,Beck,Richards
+,,Banks,Shaw
+,,,Singer
+,,,
+191 B,40,Glen,Numen
+,,Beck,Richards
+,,Banks,Shaw
+,,,Singer
+,,,
+201,60,Glen,Richards
+,,Banks,Uther
+,,Zeldin,Shaw
+,,Lock,
+,,Singer,
+,,,
+291,50,Glen,Richards
+,,Banks,Uther
+,,Zeldin,Shaw
+,,Lock,
+,,Singer,
+,,,
+303,25,Geln,Banks
+,,Zeldin,
+,,,
+304,20,Singer,Richards
+,,Uther,
+,,,
+394,15,Tyler,Richards
+,,Singer,Zeldin
+,,,
+449,30,Tyler,Zeldin
+,,Zeldin,Shaw
+,,Uther,
+,,,
+451,90,Lock,Tyler
+,,Banks,Singer
+,,Zeldin,Shaw
+,,,Glen
