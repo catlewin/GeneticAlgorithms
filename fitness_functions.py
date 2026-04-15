@@ -1,6 +1,6 @@
 from itertools import combinations
 from schedule import Schedule
-from datetime import time as t
+from cs_activity_specific_adjustments import hour_gap
 
 def check_room_overlap(schedule: Schedule):
     """Penalize -0.5 for each pair of activities sharing the same room and time slot."""
@@ -45,10 +45,6 @@ def check_facilitator(schedule: Schedule):
         else:
             schedule.fitness -= 0.1
 
-def _time_diff_hours(timeA: t, timeB: t) -> float:
-    """Return the absolute difference in hours between two datetime.time objects."""
-    return abs(timeA.hour - timeB.hour)
-
 def check_facilitator_load(schedule: Schedule):
     """
         For each facilitator:
@@ -61,7 +57,6 @@ def check_facilitator_load(schedule: Schedule):
         """
     facilitators = ['Glen', 'Lock', 'Banks', 'Numen', 'Richards',
                     'Shaw', 'Singer', 'Zeldin', 'Uther', 'Tyler']
-    #FLAG: will use facilitator class
 
     for facilitator in facilitators:
         fac_genes = [a for a in schedule.genes if a.facilitator == facilitator] # list of activities the facilitator leads
@@ -72,7 +67,7 @@ def check_facilitator_load(schedule: Schedule):
             if geneA.time == geneB.time: # overlapping activities
                 schedule.fitness -= 0.2
                 has_overlap = True
-            elif _time_diff_hours(geneA.time, geneB.time) == 1: # consecutive classes
+            elif hour_gap(geneA.time, geneB.time) == 1: # consecutive classes
                 if geneA.room.name in ['Roman', 'Beach'] or geneB.room.name in ['Roman', 'Beach']:
                     schedule.fitness -= 0.4
                 else:

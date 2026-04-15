@@ -1,5 +1,7 @@
+from activities import Activity
+
 class Gene:
-    def __init__(self, activity, time, room, facilitator):
+    def __init__(self, activity: Activity, time, room, facilitator):
         #FLAG: can replace string activity with activity class once implemented
         self.activity = activity
         self.time = time
