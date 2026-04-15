@@ -1,11 +1,10 @@
 from activities import Activity
+from rooms import Room
 
 class Gene:
-    def __init__(self, activity: Activity, time, room, facilitator):
-        #FLAG: can replace string activity with activity class once implemented
+    def __init__(self, activity: Activity, time, room: Room, facilitator):
         self.activity = activity
         self.time = time
-        #FLAG: can replace string room with room class once implemented
         self.room = room
         self.facilitator = facilitator
 
@@ -19,9 +18,15 @@ class Schedule:
 
 # check
 if __name__ == "__main__":
-    gene1 = Gene('201A', '10:00 AM', 'Beach 201', 'Shaw')
-    gene2 = Gene('201B', '1:00 PM', 'Beach 201', 'Shaw')
-    print(gene1.activity)
+    room1 = Room(name='Beach', room = 201, capacity=18)
+    activity1 = Activity(name='SLA101A', enrollment=40, preferred=['Glen', 'Lock', 'Banks'],
+                         other=['Numen', 'Richards', 'Shaw', 'Singer'])
+    gene1 = Gene(activity1, '10:00 AM', room1, 'Shaw')
+    room2 = Room(name='Beach', room=301, capacity=25)
+    activity2 = Activity(name='SLA101B', enrollment=35, preferred=['Glen', 'Lock', 'Banks'],
+                         other=['Numen', 'Richards', 'Shaw', 'Singer'])
+    gene2 = Gene(activity2, '1:00 PM', room2, 'Shaw')
+    print(gene1.activity.name)
 
     my_schedule = Schedule()
     my_schedule.add_gene(gene1)
