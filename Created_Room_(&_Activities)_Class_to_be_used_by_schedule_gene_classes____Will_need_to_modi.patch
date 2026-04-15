@@ -1,0 +1,74 @@
+Subject: [PATCH] Created Room (& Activities) Class to be used by schedule/gene classes. 
+
+Will need to modify cs_activity_specific_adjustments.py and Schedule_Generator.py to use activity & room classes
+---
+Index: rooms.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/rooms.py b/rooms.py
+--- a/rooms.py	(revision 169e219ecd11134666a105dd77c8981380d01cc7)
++++ b/rooms.py	(date 1776261439197)
+@@ -1,2 +1,17 @@
+ # class for rooms
+-# Each room has a hall name, room #, and capacity
+\ No newline at end of file
++# Each room has a hall name, room #, and capacity
++
++class Room:
++    def __init__(self, name: str, room: int, capacity: int) -> None:
++        self.name = name
++        self.room = room
++        self.capacity = capacity
++    def __eq__(self, other):
++        return self.name == other.name and self.room == other.room
++
++if __name__ == "__main__":
++    room1 = Room(name='Beach', room = 201, capacity=10)
++    room2 = Room(name='Beach', room = 301, capacity=10)
++    print(room1 == room2) # should be false
++    room2 = Room(name='Beach', room=201, capacity=10)
++    print(room1 == room2) # should be true
+\ No newline at end of file
+Index: schedule.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/schedule.py b/schedule.py
+--- a/schedule.py	(revision 169e219ecd11134666a105dd77c8981380d01cc7)
++++ b/schedule.py	(date 1776260982511)
+@@ -1,11 +1,10 @@
+ from activities import Activity
++from rooms import Room
+ 
+ class Gene:
+-    def __init__(self, activity: Activity, time, room, facilitator):
+-        #FLAG: can replace string activity with activity class once implemented
++    def __init__(self, activity: Activity, time, room: Room, facilitator):
+         self.activity = activity
+         self.time = time
+-        #FLAG: can replace string room with room class once implemented
+         self.room = room
+         self.facilitator = facilitator
+ 
+@@ -19,9 +18,15 @@
+ 
+ # check
+ if __name__ == "__main__":
+-    gene1 = Gene('201A', '10:00 AM', 'Beach 201', 'Shaw')
+-    gene2 = Gene('201B', '1:00 PM', 'Beach 201', 'Shaw')
+-    print(gene1.activity)
++    room1 = Room(name='Beach', room = 201, capacity=18)
++    activity1 = Activity(name='SLA101A', enrollment=40, preferred=['Glen', 'Lock', 'Banks'],
++                         other=['Numen', 'Richards', 'Shaw', 'Singer'])
++    gene1 = Gene(activity1, '10:00 AM', room1, 'Shaw')
++    room2 = Room(name='Beach', room=301, capacity=25)
++    activity2 = Activity(name='SLA101B', enrollment=35, preferred=['Glen', 'Lock', 'Banks'],
++                         other=['Numen', 'Richards', 'Shaw', 'Singer'])
++    gene2 = Gene(activity2, '1:00 PM', room2, 'Shaw')
++    print(gene1.activity.name)
+ 
+     my_schedule = Schedule()
+     my_schedule.add_gene(gene1)
