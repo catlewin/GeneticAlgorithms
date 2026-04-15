@@ -1,47 +1,97 @@
-# file for all fitness functions, with an additional function to call all fitness functions
-from schedule import Schedule, Gene
-import string
+from itertools import combinations
+from schedule import Schedule
+from datetime import time as t
 
-'''Fitness function:
-• For each activity, fitness starts at 0.
-• Activity is scheduled at the same time in the same room as another of the activities: -0.5
-• Room size:
-◦ Activities is in a room too small for its expected enrollment: -0.5
-◦ Activities is in a room with capacity > 1.5 times expected enrollment: -0.2
-◦ Activities is in a room with capacity > 3 times expected enrollment: -0.4
-◦ Otherwise + 0.3
-• Activities is overseen by a preferred facilitator: + 0.5
-• Activities is overseen by another facilitator listed for that activity: +0.2
-• Activities is overseen by some other facilitator: -0.1
-• Facilitator load:
-◦ Activity facilitator is scheduled for only 1 activity in this time slot: + 0.2
-◦ Activity facilitator is scheduled for more than one activity at the same time: - 0.2
-◦ Facilitator is scheduled to oversee more than 4 activities total: -0.5
-◦ Facilitator is scheduled to oversee only <3 activities*: -0.4
-▪ Exception: Dr. Tyler is committee chair and has other demands on his time.
-*No penalty if he’s only required to oversee < 2 activities.
-◦ If any facilitator scheduled for consecutive time slots: Same rules as for SLA 191 and SLA
-101 in consecutive time slots—see below.'''
+def check_room_overlap(schedule: Schedule):
+    """Penalize -0.5 for each pair of activities sharing the same room and time slot."""
+    for geneA, geneB in combinations(schedule.genes, 2):
+        if geneA.room == geneB.room and geneA.time == geneB.time:
+            schedule.fitness -= 0.5
 
-# For each activity, fitness starts at 0.
+def check_room_size(schedule: Schedule):
+    """
+        Penalize or reward based on how well the room capacity fits enrollment:
+          - Room too small (capacity < enrollment):        -0.5
+          - Room > 3x enrollment:                          -0.4
+          - Room > 1.5x enrollment:                        -0.2
+          - Appropriate size:                              +0.3
+        """
+    for gene in schedule.genes:
+        capacity = gene.room.capacity
+        enrollment = gene.activity.enrollment
+        if capacity < enrollment: # room too small
+            schedule.fitness -= 0.5
+        elif capacity > (enrollment * 1.5): # room x1.5 enrollment
+            schedule.fitness -= 0.2
+        elif capacity > (enrollment * 3): # room x3 enrollment
+            schedule.fitness -= 0.4
+        else: # appropriate size
+            schedule.fitness += 0.3
 
-# treating a schedule as a list of gene classes
+# Activities is overseen by a preferred facilitator: + 0.5
+def check_facilitator(schedule: Schedule):
+    """
+        Reward/penalize based on facilitator preference:
+          - Preferred facilitator:  +0.5
+          - Other facilitator:      +0.2
+          - Neither:                -0.1
+        """
+    for gene in schedule.genes:
+        assigned = gene.facilitator
+        if assigned in gene.activity.preferred:
+            schedule.fitness += 0.5
+        elif assigned in gene.activity.other:
+            schedule.fitness += 0.2
+        else:
+            schedule.fitness -= 0.1
 
-# Activity is scheduled at the same time in the same room as another of the activities: -0.5
-def check_room_overlap(schedule):
-    for geneA in schedule.genes:
-        for geneB in schedule.genes:
-            if geneA.room == geneB.room:
-                if geneA.time == geneB.time:
-                    geneA.fitness = -0.5
+def _time_diff_hours(timeA: t, timeB: t) -> float:
+    """Return the absolute difference in hours between two datetime.time objects."""
+    return abs(timeA.hour - timeB.hour / 60)
+
+def check_facilitator_load(schedule: Schedule):
+    """
+        For each facilitator:
+          - Scheduled for 2+ activities at the same time:     -0.2 per conflict
+          - Consecutive activities where one is Roman/Beach:  -0.4
+          - Consecutive activities (normal rooms):            +0.5
+          - Teaching > 4 activities total:                    -0.5
+          - Teaching < 2 activities (< 1 for Tyler):          -0.2
+          - No time conflicts:                                +0.2
+        """
+    facilitators = ['Glen', 'Lock', 'Banks', 'Numen', 'Richards',
+                    'Shaw', 'Singer', 'Zeldin', 'Uther', 'Tyler']
+    #FLAG: will use facilitator class
+
+    for facilitator in facilitators:
+        fac_genes = [a for a in schedule.genes if a.facilitator == facilitator] # list of activities the facilitator leads
+        activity_count = len(fac_genes)
+        has_overlap = False
+
+        for geneA, geneB in combinations(fac_genes, 2):
+            if geneA.time == geneB.time: # overlapping activities
+                schedule.fitness -= 0.2
+                has_overlap = True
+            elif _time_diff_hours(geneA.time, geneB.time) == 1: # consecutive classes
+                if geneA.room.name in ['Roman', 'Beach'] or geneB.room.name in ['Roman', 'Beach']:
+                    schedule.fitness -= 0.4
+                else:
+                    schedule.fitness += 0.5
+
+        if activity_count > 4:
+            schedule.fitness -= 0.5
+        elif activity_count < 3:
+            if not (facilitator == 'Tyler' and activity_count < 2):
+                schedule.fitness -= 0.2
+
+        if not has_overlap:
+            schedule.fitness += 0.2
 
 
-# check change occurs for fitness
-gene1 = Gene('201A', '10AM', 'Beach201', 'Shaw')
-gene2 = Gene('201B', '10AM', 'Beach201', 'Shaw')
-my_schedule = Schedule()
-my_schedule.add_gene(gene1)
-my_schedule.add_gene(gene2)
-print(my_schedule.genes[0].fitness, my_schedule.genes[1].fitness)
-check_room_overlap(my_schedule)
-print(my_schedule.genes[0].fitness, my_schedule.genes[1].fitness)
+def evaluate_fitness(schedule: Schedule):
+    """Run all fitness checks on a schedule."""
+    schedule.fitness = 0.0
+    check_room_overlap(schedule)
+    check_room_size(schedule)
+    check_facilitator(schedule)
+    check_facilitator_load(schedule)

@@ -1,5 +1,4 @@
-**CL:** Classes & Rooms can be classes, Times & Facilitator likely doesn't need a class since they're just a list. Can be housed / owned by some main function
-
+**CL:** I added the fitness functions and created the Schedule and Gene class, will need Activity and Room classes to fully implement
 
 
 ![Genetic Algorithm Project.jpg](GeneticAlgorithmProject.jpg)
