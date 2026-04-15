@@ -47,7 +47,7 @@ def check_facilitator(schedule: Schedule):
 
 def _time_diff_hours(timeA: t, timeB: t) -> float:
     """Return the absolute difference in hours between two datetime.time objects."""
-    return abs(timeA.hour - timeB.hour / 60)
+    return abs(timeA.hour - timeB.hour)
 
 def check_facilitator_load(schedule: Schedule):
     """
