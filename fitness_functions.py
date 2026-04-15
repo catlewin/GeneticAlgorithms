@@ -21,10 +21,10 @@ def check_room_size(schedule: Schedule):
         enrollment = gene.activity.enrollment
         if capacity < enrollment: # room too small
             schedule.fitness -= 0.5
-        elif capacity > (enrollment * 1.5): # room x1.5 enrollment
-            schedule.fitness -= 0.2
         elif capacity > (enrollment * 3): # room x3 enrollment
             schedule.fitness -= 0.4
+        elif capacity > (enrollment * 1.5): # room x1.5 enrollment
+            schedule.fitness -= 0.2
         else: # appropriate size
             schedule.fitness += 0.3
 
