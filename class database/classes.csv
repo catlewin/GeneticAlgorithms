@@ -1,21 +1,21 @@
-Class,Expected Enrollement,Preferred,Other
+﻿Class,Expected Enrollement,Preferred,Other
 101 A,40,Glen,Numen
-,,Beck,Richards
+,,Lock,Richards
 ,,Banks,Shaw
 ,,,Singer
 ,,,
 101 B,35,Glen,Numen
-,,Beck,Richards
+,,Lock,Richards
 ,,Banks,Shaw
 ,,,Singer
 ,,,
 191 A,45,Glen,Numen
-,,Beck,Richards
+,,Lock,Richards
 ,,Banks,Shaw
 ,,,Singer
 ,,,
 191 B,40,Glen,Numen
-,,Beck,Richards
+,,Lock,Richards
 ,,Banks,Shaw
 ,,,Singer
 ,,,
@@ -31,7 +31,7 @@ Class,Expected Enrollement,Preferred,Other
 ,,Lock,
 ,,Singer,
 ,,,
-303,25,Geln,Banks
+303,25,Glen,Banks
 ,,Zeldin,
 ,,,
 304,20,Singer,Richards
