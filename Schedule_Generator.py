@@ -70,19 +70,20 @@ def load_facilitators(path="facilitators.csv") -> list[str]:
 #  Schedule generation 
  
 def generate_random_schedule(
-    courses: list[Activity],
+    courses: list[Activity],   # order is preserved — do not shuffle before passing
     rooms: list[Room],
     times: list[str],
     facilitators: list[str],
 ) -> Schedule:
     """Randomly assign a Room, time slot, and facilitator to each Activity.
-    Returns a Schedule of Gene objects compatible with the fitness functions."""
+    Genes are added in the same order as `courses`, which must be stable
+    across all schedules so that index-based crossover works correctly."""
     schedule = Schedule()
     for activity in courses:
         gene = Gene(
-            activity=activity,  # Activity object
+            activity=activity,
             time=random.choice(times),
-            room=random.choice(rooms),  # Room object
+            room=random.choice(rooms),
             facilitator=random.choice(facilitators),
         )
         schedule.add_gene(gene)
@@ -100,7 +101,14 @@ def print_schedule(schedule: Schedule):
         room_str = f"{g.room.name} {g.room.room}"  # e.g. "Beach 201"
         print(f"  {g.activity.name:<10} {g.time:<12} {room_str:<20} {g.facilitator}")
     print(f"{'─'*65}\n")
- 
+
+def print_in_activity_order(schedule: Schedule):
+    print(f"  {'COURSE':<10} {'TIME':<12} {'ROOM':<16} FACILITATOR")
+    print(f"{'─' * 65}")
+    for g in schedule.genes:
+        room_str = f"{g.room.name} {g.room.room}"  # e.g. "Beach 201"
+        print(f"  {g.activity.name:<10} {g.time:<12} {room_str:<20} {g.facilitator}")
+    print(f"{'─' * 65}\n")
  
 #  Main 
  
@@ -118,3 +126,7 @@ if __name__ == "__main__":
 
     schedule2 = generate_random_schedule(courses, rooms, times, facilitators)
     print_schedule(schedule2)
+
+    # print in activity order, to make sure consistent for all schedules
+    # print_in_activity_order(schedule)
+    # print_in_activity_order(schedule2)
