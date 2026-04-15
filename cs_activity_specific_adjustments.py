@@ -1,4 +1,6 @@
 # time string to numeric hour mapping
+from rooms import Room
+from activities import Activity
 
 TIME_TO_HOUR = {
     "10:00 AM": 10,
@@ -10,9 +12,9 @@ TIME_TO_HOUR = {
 }
 
 # helper to check if a room is in the Roman or Beach building
-def is_roman_or_beach(room_name: str) -> bool:
-    # return True if the room belongs to Roman or Beach hall
-    return room_name.startswith("Roman") or room_name.startswith("Beach")
+def is_roman_or_beach(room: Room) -> bool:
+    # accepts a Room object and checks the .name attribute
+    return room.name == "Roman" or room.name == "Beach"
 
 
 # helper to compute the absolute hour gap between two time strings
@@ -25,7 +27,7 @@ def hour_gap(time_a: str, time_b: str) -> int:
 def find_gene(genes, activity_name: str):
     # find and return the Gene with the matching activity name
     for gene in genes:
-        if gene.activity == activity_name:
+        if gene.activity.name == activity_name:
             return gene
     return None
 
@@ -42,6 +44,7 @@ def activity_specific_score(schedule) -> float:
     gene_191b = find_gene(genes, "191 B")
 
     # safety check, if any are missing then can't score these rules
+    #FLAG - i think this logic is wrong, we want to check if pairs 101a & 101b exist, and 191a & 191b, not all 4
     if not all([gene_101a, gene_101b, gene_191a, gene_191b]):
         return 0.0
 
@@ -99,20 +102,22 @@ def activity_specific_score(schedule) -> float:
 
 if __name__ == "__main__":
     from schedule import Gene, Schedule
+    from activities import activities
+    from rooms import rooms
 
     # build a test schedule
     test_schedule = Schedule()
-    test_schedule.add_gene(Gene("101 A", "10:00 AM", "Roman 201", "Glen"))
-    test_schedule.add_gene(Gene("101 B", "3:00 PM",  "Beach 201", "Lock"))
-    test_schedule.add_gene(Gene("191 A", "11:00 AM", "Frank 119", "Banks"))
-    test_schedule.add_gene(Gene("191 B", "2:00 PM",  "Loft 206",  "Shaw"))
-    test_schedule.add_gene(Gene("201",   "12:00 PM", "James 325", "Singer"))
-    test_schedule.add_gene(Gene("291",   "1:00 PM",  "Loft 310",  "Uther"))
-    test_schedule.add_gene(Gene("303",   "10:00 AM", "Beach 301", "Zeldin"))
-    test_schedule.add_gene(Gene("304",   "11:00 AM", "Roman 216", "Tyler"))
-    test_schedule.add_gene(Gene("394",   "12:00 PM", "Slater 003","Richards"))
-    test_schedule.add_gene(Gene("449",   "1:00 PM",  "Beach 201", "Numen"))
-    test_schedule.add_gene(Gene("451",   "2:00 PM",  "Frank 119", "Lock"))
+    test_schedule.add_gene(Gene(activities['101A'], "10:00 AM", rooms['Roman 201'], "Glen"))
+    test_schedule.add_gene(Gene(activities['101B'], "3:00 PM", rooms['Beach 201'], "Lock"))
+    test_schedule.add_gene(Gene(activities['191A'], "11:00 AM", rooms['Frank 119'], "Banks"))
+    test_schedule.add_gene(Gene(activities['191B'], "2:00 PM", rooms['Loft 206'], "Shaw"))
+    test_schedule.add_gene(Gene(activities['201A'], "12:00 PM", rooms['James 325'], "Singer"))
+    test_schedule.add_gene(Gene(activities['291A'], "1:00 PM", rooms['Loft 310'], "Uther"))
+    test_schedule.add_gene(Gene(activities['303'], "10:00 AM", rooms['Beach 301'], "Zeldin"))
+    test_schedule.add_gene(Gene(activities['304'], "11:00 AM", rooms['Roman 216'], "Tyler"))
+    test_schedule.add_gene(Gene(activities['394'], "12:00 PM", rooms['Slater 003'], "Richards"))
+    test_schedule.add_gene(Gene(activities['449'], "1:00 PM", rooms['Beach 201'], "Numen"))
+    test_schedule.add_gene(Gene(activities['451'], "2:00 PM", rooms['Frank 119'], "Lock"))
 
     result = activity_specific_score(test_schedule)
 
@@ -125,10 +130,14 @@ if __name__ == "__main__":
     print(f"SLA191 A vs B gap: {gap_191} hours → {'> 4 → +0.5' if gap_191 > 4 else 'no section bonus'}")
 
     pairs_desc = [
-        ("101A(10AM,Roman201)", "191A(11AM,Frank119)", "10:00 AM", "11:00 AM", "Roman 201", "Frank 119"),
-        ("101A(10AM,Roman201)", "191B(2PM,Loft206)",   "10:00 AM", "2:00 PM",  "Roman 201", "Loft 206"),
-        ("101B(3PM,Beach201)",  "191A(11AM,Frank119)", "3:00 PM",  "11:00 AM", "Beach 201", "Frank 119"),
-        ("101B(3PM,Beach201)",  "191B(2PM,Loft206)",   "3:00 PM",  "2:00 PM",  "Beach 201", "Loft 206"),
+        ("101A(10AM,Roman201)", "191A(11AM,Frank119)", "10:00 AM", "11:00 AM", Room("Roman", 201, 40),
+         Room("Frank", 119, 95)),
+        ("101A(10AM,Roman201)", "191B(2PM,Loft206)", "10:00 AM", "2:00 PM", Room("Roman", 201, 40),
+         Room("Loft", 206, 55)),
+        ("101B(3PM,Beach201)", "191A(11AM,Frank119)", "3:00 PM", "11:00 AM", Room("Beach", 201, 40),
+         Room("Frank", 119, 95)),
+        ("101B(3PM,Beach201)", "191B(2PM,Loft206)", "3:00 PM", "2:00 PM", Room("Beach", 201, 40),
+         Room("Loft", 206, 55)),
     ]
 
     print("\nCross-pair analysis:")

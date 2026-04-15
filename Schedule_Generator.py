@@ -1,10 +1,12 @@
 import csv
 import random
 from schedule import Gene, Schedule
+from activities import Activity
+from rooms import Room
  
  
 #  Load data from CSVs 
-def load_courses(path="classes.csv") -> list[dict]:
+def load_courses(path="database/activities.csv") -> list[dict]:
     """Parse the multi-row classes.csv where preferred/other cols span several rows."""
     courses = []
     current = None
@@ -18,31 +20,39 @@ def load_courses(path="classes.csv") -> list[dict]:
             enrollment = row[1].strip()
             preferred  = row[2].strip()
             other      = row[3].strip()
- 
+
             if class_name:  # Start of a new course block
                 if current:
                     courses.append(current)
-                current = {
-                    "name": class_name,
-                    "expected_enrollment": int(enrollment),
-                    "preferred": [preferred] if preferred else [],
-                    "other": [other] if other else [],
-                }
-            elif current:   # Continuation row for the current course
+                #current = Activity(class_name, int(enrollment), [preferred], [other])
+                current = Activity(
+                    name=class_name,
+                    enrollment=int(enrollment),
+                    preferred=[preferred] if preferred else [],
+                    other=[other] if other else [],
+                )
+            elif current:  # continuation row — additional facilitators
                 if preferred:
-                    current["preferred"].append(preferred)
+                    current.preferred.append(preferred)
                 if other:
-                    current["other"].append(other)
- 
+                    current.other.append(other)
+
     if current:
         courses.append(current)
     return courses
  
  
-def load_rooms(path="rooms.csv") -> list[str]:
-    """Returns room names as 'Hall Room' strings matching the fitness code format."""
+def load_rooms(path="rooms.csv") -> list[Room]:
+    """Parse rooms.csv and return a list of Room objects."""
+    rooms = []
     with open(path, newline="", encoding="utf-8-sig") as f:
-        return [f"{row['Hall']} {row['Room']}" for row in csv.DictReader(f)]
+        for row in csv.DictReader(f):
+            rooms.append(Room(
+                name=row["Hall"].strip(),
+                room=int(row["Room"].strip()),
+                capacity=int(row["Capacity"].strip())
+            ))
+    return rooms
  
  
 def load_times(path="times.csv") -> list[str]:
@@ -60,19 +70,19 @@ def load_facilitators(path="facilitators.csv") -> list[str]:
 #  Schedule generation 
  
 def generate_random_schedule(
-    courses: list[dict],
-    rooms: list[str],
+    courses: list[Activity],
+    rooms: list[Room],
     times: list[str],
     facilitators: list[str],
 ) -> Schedule:
-    """Randomly assign a room, time, and facilitator to each course.
+    """Randomly assign a Room, time slot, and facilitator to each Activity.
     Returns a Schedule of Gene objects compatible with the fitness functions."""
     schedule = Schedule()
-    for course in courses:
+    for activity in courses:
         gene = Gene(
-            activity=course["name"],
+            activity=activity,  # Activity object
             time=random.choice(times),
-            room=random.choice(rooms),
+            room=random.choice(rooms),  # Room object
             facilitator=random.choice(facilitators),
         )
         schedule.add_gene(gene)
@@ -87,20 +97,24 @@ def print_schedule(schedule: Schedule):
     print(f"  {'COURSE':<10} {'TIME':<12} {'ROOM':<16} FACILITATOR")
     print(f"{'─'*65}")
     for g in sorted(schedule.genes, key=lambda x: TIME_ORDER.index(x.time) if x.time in TIME_ORDER else 99):
-        print(f"  {g.activity:<10} {g.time:<12} {g.room:<16} {g.facilitator}")
+        room_str = f"{g.room.name} {g.room.room}"  # e.g. "Beach 201"
+        print(f"  {g.activity.name:<10} {g.time:<12} {room_str:<20} {g.facilitator}")
     print(f"{'─'*65}\n")
  
  
 #  Main 
  
 if __name__ == "__main__":
-    courses      = load_courses("classes.csv")
-    rooms        = load_rooms("rooms.csv")
-    times        = load_times("times.csv")
-    facilitators = load_facilitators("facilitators.csv")
+    courses      = load_courses("database/activities.csv")
+    rooms        = load_rooms("database/rooms.csv")
+    times        = load_times("database/times.csv")
+    facilitators = load_facilitators("database/facilitators.csv")
  
     print(f"Loaded {len(courses)} courses, {len(rooms)} rooms, "
           f"{len(times)} time slots, {len(facilitators)} facilitators.")
- 
+
     schedule = generate_random_schedule(courses, rooms, times, facilitators)
     print_schedule(schedule)
+
+    schedule2 = generate_random_schedule(courses, rooms, times, facilitators)
+    print_schedule(schedule2)
