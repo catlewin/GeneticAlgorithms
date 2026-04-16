@@ -66,7 +66,13 @@ def load_facilitators(path="facilitators.csv") -> list[str]:
     with open(path, newline="", encoding="utf-8-sig") as f:
         return [line.strip() for line in f if line.strip()]
  
- 
+
+def load_all_data():
+    courses = load_courses("database/activities.csv")
+    rooms = load_rooms("database/rooms.csv")
+    times = load_times("database/times.csv")
+    facilitators = load_facilitators("database/facilitators.csv")
+    return courses, rooms, times, facilitators
 #  Schedule generation 
  
 def generate_random_schedule(
@@ -109,8 +115,8 @@ def print_in_activity_order(schedule: Schedule):
         room_str = f"{g.room.name} {g.room.room}"  # e.g. "Beach 201"
         print(f"  {g.activity.name:<10} {g.time:<12} {room_str:<20} {g.facilitator}")
     print(f"{'─' * 65}\n")
- 
-#  Main 
+
+#  Main
  
 if __name__ == "__main__":
     courses      = load_courses("database/activities.csv")
