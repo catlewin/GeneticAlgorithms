@@ -1,5 +1,7 @@
 from schedule import Schedule, Gene
 from Schedule_Generator import generate_random_schedule, load_all_data
+from fitness_functions import evaluate_fitness
+from cs_activity_specific_adjustments import activity_specific_score
 
 
 class Generation:
@@ -16,9 +18,17 @@ class Generation:
             self.schedules.append(schedule)
             if i == 0:
                 print(schedule.genes[0].time, schedule.genes[1].time)
+    def calc_fitness(self):
+        for i in range(1000):
+            self.schedules[i].fitness = activity_specific_score(self.schedules[i])
+            evaluate_fitness(self.schedules[i])
 
 if __name__ == "__main__":
     my_generation = Generation()
     my_generation.generate_gen0()
+    my_generation.calc_fitness()
     print(len(my_generation.schedules))
     print(my_generation.schedules[0].genes[0].time)
+    print(my_generation.schedules[0].fitness)
+    print(my_generation.schedules[1].fitness)
+    print(my_generation.schedules[2].fitness)
