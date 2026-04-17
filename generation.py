@@ -19,9 +19,20 @@ class Generation:
             if i == 0:
                 print(schedule.genes[0].time, schedule.genes[1].time)
     def calc_fitness(self):
+        fitness_scores = []
+        best = None
+        worst = None
         for i in range(1000):
             self.schedules[i].fitness = activity_specific_score(self.schedules[i])
             evaluate_fitness(self.schedules[i])
+            fitness_scores.append(self.schedules[i].fitness)
+            if best is None or self.schedules[i].fitness < best.fitness:
+                best = self.schedules[i]
+            if worst is None or self.schedules[i].fitness > worst.fitness:
+                worst = self.schedules[i]
+        self.best_fit = best.fitness
+        self.worst_fit = worst.fitness
+        self.avg_fit = sum(fitness_scores) / len(fitness_scores)
 
 if __name__ == "__main__":
     my_generation = Generation()
@@ -32,3 +43,7 @@ if __name__ == "__main__":
     print(my_generation.schedules[0].fitness)
     print(my_generation.schedules[1].fitness)
     print(my_generation.schedules[2].fitness)
+
+    print(my_generation.best_fit)
+    print(my_generation.worst_fit)
+    print(my_generation.avg_fit)
