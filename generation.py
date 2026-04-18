@@ -1,7 +1,6 @@
 from schedule import Schedule, Gene
 from Schedule_Generator import generate_random_schedule, load_all_data
 from fitness_functions import evaluate_fitness
-from cs_activity_specific_adjustments import activity_specific_score
 
 
 class Generation:
@@ -23,7 +22,6 @@ class Generation:
         best = None
         worst = None
         for i in range(1000):
-            self.schedules[i].fitness = activity_specific_score(self.schedules[i])
             evaluate_fitness(self.schedules[i])
             fitness_scores.append(self.schedules[i].fitness)
             if best is None or self.schedules[i].fitness > best.fitness:
