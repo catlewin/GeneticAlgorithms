@@ -54,7 +54,7 @@ def check_facilitator_load(schedule: Schedule):
           - Consecutive activities where one is Roman/Beach:  -0.4
           - Consecutive activities (normal rooms):            +0.5
           - Teaching > 4 activities total:                    -0.5
-          - Teaching < 2 activities (< 1 for Tyler):          -0.2
+          - Teaching < 2 activities (< 1 for Tyler):          -0.4
           - No time conflicts:                                +0.2
         """
     facilitators = ['Glen', 'Lock', 'Banks', 'Numen', 'Richards',
@@ -78,8 +78,10 @@ def check_facilitator_load(schedule: Schedule):
         if activity_count > 4:
             schedule.fitness -= 0.5
         elif activity_count < 3:
-            if not (facilitator == 'Tyler' and activity_count < 2):
-                schedule.fitness -= 0.2
+            if facilitator == 'Tyler' and activity_count < 2:
+                pass # no penalty for Tyle w/ fewer than 2
+            else:
+                schedule.fitness -=0.4
 
         if not has_overlap:
             schedule.fitness += 0.2
