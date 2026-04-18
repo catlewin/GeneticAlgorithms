@@ -1,6 +1,8 @@
 from itertools import combinations
 from schedule import Schedule
 from cs_activity_specific_adjustments import hour_gap
+from cs_activity_specific_adjustments import activity_specific_score
+
 
 def check_room_overlap(schedule: Schedule):
     """Penalize -0.5 for each pair of activities sharing the same room and time slot."""
@@ -90,3 +92,4 @@ def evaluate_fitness(schedule: Schedule):
     check_room_size(schedule)
     check_facilitator(schedule)
     check_facilitator_load(schedule)
+    schedule.fitness += activity_specific_score(schedule)
