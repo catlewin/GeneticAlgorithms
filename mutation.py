@@ -2,7 +2,6 @@ import random
 import copy
 from generation import Generation
 from fitness_functions import evaluate_fitness
-from cs_activity_specific_adjustments import activity_specific_score
 from Schedule_Generator import load_all_data
  
  
@@ -69,7 +68,6 @@ def mutate(schedule, mutation_rate: float, rooms: list, times: list, facilitator
 def score_population(schedules: list):
     """Evaluate and store fitness for every schedule in the list."""
     for schedule in schedules:
-        schedule.fitness = activity_specific_score(schedule)
         evaluate_fitness(schedule)
  
  
