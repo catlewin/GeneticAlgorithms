@@ -26,9 +26,9 @@ class Generation:
             self.schedules[i].fitness = activity_specific_score(self.schedules[i])
             evaluate_fitness(self.schedules[i])
             fitness_scores.append(self.schedules[i].fitness)
-            if best is None or self.schedules[i].fitness < best.fitness:
+            if best is None or self.schedules[i].fitness > best.fitness:
                 best = self.schedules[i]
-            if worst is None or self.schedules[i].fitness > worst.fitness:
+            if worst is None or self.schedules[i].fitness < worst.fitness:
                 worst = self.schedules[i]
         self.best_fit = best.fitness
         self.worst_fit = worst.fitness
