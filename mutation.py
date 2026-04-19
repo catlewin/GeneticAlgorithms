@@ -1,16 +1,23 @@
-import random
 import copy
+import numpy as np
+from numpy.random import Generator, PCG64DXSM
+
 from generation import Generation
 from fitness_functions import evaluate_fitness
-from cs_activity_specific_adjustments import activity_specific_score
 from Schedule_Generator import load_all_data
 
+# --- RNG ---
+# PCG64DXSM is higher quality than Python's default Mersenne Twister,
+# especially important for large populations where MT can show correlations.
+rng = Generator(PCG64DXSM())
 
 # --- Constants ---
-POPULATION_SIZE   = 1000
-BASE_MUTATION_RATE = 0.01   # 1% per gene to start
-MIN_IMPROVEMENT   = 0.01    # 1% threshold — if avg fitness improves less than this, halve mutation rate
-STOP_IMPROVEMENT  = 0.001   # near-zero floor — stop when improvement drops below this
+POPULATION_SIZE    = 1000
+BASE_MUTATION_RATE = 0.01   # starting mutation rate
+STOP_IMPROVEMENT   = 0.001  # near-zero floor — stop when improvement drops below this (Phase 2 only)
+MAX_MUTATION_RATE  = 0.25   # cap: never mutate more than 25% of genes
+MIN_MUTATION_RATE  = 0.001  # floor: never drop below 0.1%
+MANDATORY_GENS     = 100    # minimum generations before stop condition is checked
 
 
 def sort_schedules(schedules: list) -> list:
@@ -25,23 +32,40 @@ def cull_bottom_half(schedules: list) -> list:
     return sorted_schedules[:cutoff]
 
 
+def softmax_select(schedules: list, n: int) -> list:
+    """
+    Select n schedules with probability proportional to softmax(fitness).
+    Softmax converts raw fitness scores into a proper probability distribution,
+    so fitter schedules are more likely to be chosen as parents without
+    completely excluding weaker ones (preserving diversity).
+    The subtraction of max(scores) before exp() is a standard numerical
+    stability trick to prevent overflow.
+    """
+    scores = np.array([s.fitness for s in schedules], dtype=np.float64)
+    scores -= scores.max()           # numerical stability
+    weights = np.exp(scores)
+    weights /= weights.sum()         # normalize to probabilities
+    indices = rng.choice(len(schedules), size=n, replace=False, p=weights)
+    return [schedules[i] for i in indices]
+
+
 def crossover(parent_a, parent_b) -> tuple:
     """
-    Produce two children by swapping a random gene slice between two parents.
-    Each pair gets its own independently random splice range.
-    Parents are deep-copied so originals are not mutated.
+    Single-point crossover: pick one splice index, everything before it
+    comes from parent A, everything from it onward comes from parent B
+    (and vice versa for the second child).
+    Parents are deep-copied so originals are never modified.
     """
     num_genes = len(parent_a.genes)
 
-    # pick two distinct indices for the splice range
-    idx1, idx2 = sorted(random.sample(range(num_genes), 2))
+    # randint(1, num_genes) ensures at least one gene from each parent
+    idx = rng.integers(1, num_genes)
 
     child_a = copy.deepcopy(parent_a)
     child_b = copy.deepcopy(parent_b)
 
-    # swap the slice between the two children
-    child_a.genes[idx1:idx2] = copy.deepcopy(parent_b.genes[idx1:idx2])
-    child_b.genes[idx1:idx2] = copy.deepcopy(parent_a.genes[idx1:idx2])
+    child_a.genes = copy.deepcopy(parent_a.genes[:idx]) + copy.deepcopy(parent_b.genes[idx:])
+    child_b.genes = copy.deepcopy(parent_b.genes[:idx]) + copy.deepcopy(parent_a.genes[idx:])
 
     child_a.fitness = 0.0
     child_b.fitness = 0.0
@@ -55,49 +79,47 @@ def mutate(schedule, mutation_rate: float, rooms: list, times: list, facilitator
     If triggered, randomly replace the time, room, or facilitator.
     """
     for gene in schedule.genes:
-        if random.random() < mutation_rate:
-            attribute = random.choice(['time', 'room', 'facilitator'])
+        if rng.random() < mutation_rate:
+            attribute = rng.choice(['time', 'room', 'facilitator'])
             if attribute == 'time':
-                gene.time = random.choice(times)
+                gene.time = rng.choice(times)
             elif attribute == 'room':
-                gene.room = random.choice(rooms)
+                gene.room = rng.choice(rooms)
             else:
-                gene.facilitator = random.choice(facilitators)
+                gene.facilitator = rng.choice(facilitators)
 
 
 def score_population(schedules: list):
     """Evaluate and store fitness for every schedule in the list."""
     for schedule in schedules:
-        schedule.fitness = activity_specific_score(schedule)
-        evaluate_fitness(schedule)
+        evaluate_fitness(schedule)  # resets fitness to 0.0 and runs all checks internally
 
 
 def run_one_generation(current_population, mutation_rate, rooms, times, facilitators):
     """
     Run a single generation cycle:
       1. Cull bottom 50%
-      2. Crossover survivors into new children
-      3. Mutate children
-      4. Score children
-      5. Merge and re-sort, keeping top POPULATION_SIZE
+      2. Softmax-weighted selection of parent pairs
+      3. Single-point crossover to produce children
+      4. Mutate children
+      5. Score children
+      6. Merge and re-sort, keeping top POPULATION_SIZE
     Returns the new population and its stats.
     """
     # --- Cull bottom 50% ---
     survivors = cull_bottom_half(current_population)
 
-    # --- Crossover: randomly pair survivors to produce children ---
-    shuffled = survivors[:]
-    random.shuffle(shuffled)
+    # --- Softmax-weighted parent selection ---
+    # Select the same number of parents as survivors so we produce enough children.
+    # Pairing is done sequentially after selection (selected[0] x selected[1], etc.)
+    n_parents = len(survivors) if len(survivors) % 2 == 0 else len(survivors) - 1
+    selected = softmax_select(survivors, n_parents)
 
     children = []
-    for i in range(0, len(shuffled) - 1, 2):
-        child_a, child_b = crossover(shuffled[i], shuffled[i + 1])
+    for i in range(0, n_parents, 2):
+        child_a, child_b = crossover(selected[i], selected[i + 1])
         children.append(child_a)
         children.append(child_b)
-
-    # if odd number of survivors, carry last one over unchanged
-    if len(shuffled) % 2 == 1:
-        children.append(copy.deepcopy(shuffled[-1]))
 
     # --- Mutate children ---
     for child in children:
@@ -119,17 +141,47 @@ def run_one_generation(current_population, mutation_rate, rooms, times, facilita
     return new_population, best_fit, avg_fit, worst_fit
 
 
+def adapt_mutation_rate(mutation_rate: float, improvement: float) -> tuple[float, str]:
+    """
+    Adjust mutation rate based on rolling improvement.
+    - Any positive improvement → halve rate (population is making progress, fine-tune)
+    - Zero or negative improvement → double rate (population is stalling, explore)
+    Returns the new rate and a log message (empty string if no change).
+    """
+    if improvement > 0:
+        new_rate = max(mutation_rate / 2, MIN_MUTATION_RATE)
+        direction = "down"
+    else:
+        new_rate = min(mutation_rate * 2, MAX_MUTATION_RATE)
+        direction = "up"
+
+    if new_rate != mutation_rate:
+        msg = (f"  >> Rolling improvement ({improvement:.6f}) — "
+               f"adjusting mutation rate {direction}: {mutation_rate:.6f} → {new_rate:.6f}")
+    else:
+        msg = ""
+    return new_rate, msg
+
+
+def compute_improvement(history: list, prev_avg: float, avg_fit: float) -> float:
+    """
+    Rolling average improvement per generation over the last 5 entries.
+    Falls back to single-step delta when history is too short.
+    """
+    if len(history) >= 5:
+        recent_avgs = [h['avg'] for h in history[-5:]]
+        return (recent_avgs[-1] - recent_avgs[0]) / 4
+    return avg_fit - prev_avg
+
+
 def run_evolution():
     """
-    Main loop:
+    Unified adaptive evolution loop.
 
-    Phase 1 — first 100 generations (mandatory):
-      Run unconditionally, using BASE_MUTATION_RATE.
-
-    Phase 2 — after 100 generations:
-      Each generation, compute improvement = current_avg - previous_avg.
-      - If improvement < MIN_IMPROVEMENT (1%): halve the mutation rate and keep going.
-      - If improvement < STOP_IMPROVEMENT (near zero): stop.
+    Every generation (including the mandatory first 100) uses the same
+    adaptive mutation logic: rate doubles when progress stalls, halves
+    when progress is strong. The only difference between Phase 1 and
+    Phase 2 is that the stop condition is not checked until gen 100.
     """
     _, rooms, times, facilitators = load_all_data()
 
@@ -153,36 +205,13 @@ def run_evolution():
     current_population = gen0.schedules
     prev_avg = gen0.avg_fit
     mutation_rate = BASE_MUTATION_RATE
+    gen_num = 1
 
-    # ---- Phase 1: mandatory 100 generations ----
-    for gen_num in range(1, 101):
-        current_population, best_fit, avg_fit, worst_fit = run_one_generation(
-            current_population, mutation_rate, rooms, times, facilitators
-        )
-
-        history.append({
-            'generation': gen_num,
-            'best': best_fit,
-            'worst': worst_fit,
-            'avg': avg_fit,
-            'mutation_rate': mutation_rate,
-        })
-
-        print(f"Gen {gen_num:>3} — best: {best_fit:.3f}, avg: {avg_fit:.3f}, "
-              f"worst: {worst_fit:.3f}, mutation: {mutation_rate:.6f}")
-
-        prev_avg = avg_fit
-
-    print("\n--- Mandatory 100 generations complete. Entering adaptive phase. ---\n")
-
-    # ---- Phase 2: adaptive stopping ----
-    gen_num = 101
     while True:
         current_population, best_fit, avg_fit, worst_fit = run_one_generation(
             current_population, mutation_rate, rooms, times, facilitators
         )
 
-        # append first so the rolling window includes the current generation
         history.append({
             'generation': gen_num,
             'best': best_fit,
@@ -191,24 +220,20 @@ def run_evolution():
             'mutation_rate': mutation_rate,
         })
 
-        # rolling window: average improvement per generation over last 5 gens
-        if len(history) >= 5:
-            recent_avgs = [h['avg'] for h in history[-5:]]
-            improvement = (recent_avgs[-1] - recent_avgs[0]) / 4
-        else:
-            improvement = avg_fit - prev_avg
+        improvement = compute_improvement(history, prev_avg, avg_fit)
+        mutation_rate, rate_msg = adapt_mutation_rate(mutation_rate, improvement)
+        if rate_msg:
+            print(rate_msg)
 
-        # halve condition: avg improvement dropped below 1%
-        if improvement < MIN_IMPROVEMENT:
-            mutation_rate /= 2
-            print(f"  >> Rolling improvement ({improvement:.6f}) < {MIN_IMPROVEMENT} — "
-                  f"halving mutation rate to {mutation_rate:.6f}")
-
-        print(f"Gen {gen_num:>3} — best: {best_fit:.3f}, avg: {avg_fit:.3f}, "
+        phase = "mandatory" if gen_num <= MANDATORY_GENS else "adaptive"
+        print(f"Gen {gen_num:>3} [{phase}] — best: {best_fit:.3f}, avg: {avg_fit:.3f}, "
               f"worst: {worst_fit:.3f}, mutation: {mutation_rate:.6f}")
 
-        # stop condition: rolling improvement is near zero even after halving
-        if abs(improvement) < STOP_IMPROVEMENT:
+        if gen_num == MANDATORY_GENS:
+            print("\n--- Mandatory 100 generations complete. Stop condition now active. ---\n")
+
+        # stop condition only applies after mandatory phase
+        if gen_num > MANDATORY_GENS and abs(improvement) < STOP_IMPROVEMENT:
             print(f"\nStopping: rolling improvement ({improvement:.6f}) is below floor ({STOP_IMPROVEMENT}).")
             break
 

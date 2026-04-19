@@ -15,8 +15,6 @@ class Generation:
         for i in range(1000):
             schedule = generate_random_schedule(courses, rooms, times, facilitators)
             self.schedules.append(schedule)
-            if i == 0:
-                print(schedule.genes[0].time, schedule.genes[1].time)
     def calc_fitness(self):
         fitness_scores = []
         best = None
