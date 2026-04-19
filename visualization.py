@@ -135,7 +135,7 @@ def plot_fitness(history: list[dict], save_path: str = None):
 if __name__ == "__main__":
     from mutation import run_evolution, sort_schedules
 
-    final_population, history = run_evolution(num_generations=100)
+    final_population, history = run_evolution()
 
     # print fitness stats table
     print_fitness_stats(history)
