@@ -34,12 +34,12 @@ activity_451 = Activity("451", enrollment=90, preferred=['Lock', 'Zeldin', 'Bank
                                          other=['Tyler', 'Singer', 'Shaw', 'Glen'])
 
 activities = {
-    '101A': activity_101A,
-    '101B': activity_101B,
-    '191A': activity_191A,
-    '191B': activity_191B,
-    '201A': activity_201,
-    '201B': activity_201,
+    '101 A': activity_101A,
+    '101 B': activity_101B,
+    '191 A': activity_191A,
+    '191 B': activity_191B,
+    '201': activity_201,
+    '291': activity_291,
     '291A': activity_291,
     '303': activity_303,
     '304': activity_304,
