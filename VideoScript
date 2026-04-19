@@ -1,0 +1,77 @@
+# CS 461 Program 2 — Video Script
+## Genetic Algorithm Scheduler | ~6 minutes
+
+---
+
+## Cat (~2 minutes) — Data Model & Fitness Functions
+
+**[Show schedule.py, rooms.py, activities.py on screen]**
+
+"I built the data model for the program. The core unit is the Gene class — each Gene represents one activity assignment and holds four things: an Activity object, a time slot, a Room object, and a facilitator name. A Schedule is just a list of Genes with a fitness score."
+
+"The Activity class stores the course name, expected enrollment, and two lists — preferred and other facilitators. The Room class stores the building name, room number, and capacity. Having these as objects instead of raw strings lets us access things like room capacity and facilitator preferences directly in the fitness functions."
+
+**[Show fitness_functions.py on screen]**
+
+"The fitness function scores a schedule by checking four things independently for each activity."
+
+"First, room overlap — if two activities share the same room and time slot, each gets -0.5. Second, room size fit — too small is -0.5, way too big is -0.4, somewhat too big is -0.2, and a good fit is +0.3. The order of those checks matters — we had a bug early on where the 3x check came after the 1.5x check, so the bigger penalty was never reachable."
+
+"Third, facilitator preference — preferred is +0.5, other listed is +0.2, unlisted is -0.1. Fourth, facilitator load — we check for time conflicts, consecutive slots, and total activity count. Dr. Tyler is a special case because he's committee chair, so he's exempt from the underload penalty if he has fewer than 2 activities."
+
+"All of these individual scores get summed together with Ayan's activity-specific adjustments to produce the total fitness for a schedule."
+
+---
+
+## Derek (~2 minutes) — Schedule Generator & GA Engine
+
+**[Show Schedule_Generator.py on screen]**
+
+"I built the schedule generator and the genetic algorithm engine. The generator reads from our CSV database — activities, rooms, time slots, and facilitators — and creates random schedules. Each schedule has the same 11 activities in the same order, but with randomly assigned rooms, times, and facilitators. We start with a population of 1,000 random schedules."
+
+**[Show mutation.py on screen]**
+
+"The GA engine has four main components. First, selection — we sort all schedules by fitness and kill the bottom 50%. Second, crossover — we randomly pair up survivors and splice their genes at a random index to produce two children per pair. This preserves good gene combinations from the parents."
+
+"Third, mutation — for each gene in each child, there's a small chance we randomly re-roll its time, room, or facilitator. We never change which activity is at a position — that stays fixed. The mutation rate starts at 1% and adapts based on fitness improvement."
+
+**[Show terminal output with generation stats]**
+
+"Fourth, the generational loop — we run at least 100 generations. After that, if the average fitness improvement drops below 1%, we halve the mutation rate and keep going. We keep halving until the rate gets too small, then we stop. This lets the algorithm fine-tune in the later stages."
+
+"You can see in the output that fitness climbs quickly in the first 30 generations, then plateaus around 12.4. When the mutation rate jumps to 5% during plateau periods, the worst fitness drops but it helps explore new solutions."
+
+---
+
+## Ayan (~2 minutes) — Activity-Specific Adjustments & Visualization
+
+**[Show cs_activity_specific_adjustments.py on screen]**
+
+"I built the activity-specific fitness adjustments. These are the cross-activity rules that compare SLA 101 and SLA 191 sections against each other — they can't be scored by looking at one activity alone."
+
+"The function checks three things. First, it checks whether the two sections of SLA 101 are far enough apart — more than 4 hours earns a bonus, same time slot is a penalty. Same logic for SLA 191 sections."
+
+"Second, it checks all four cross-pairs between 101 and 191 sections. If a 101 section and a 191 section are in consecutive time slots, that's a +0.5 bonus — but if one of them is in Roman or Beach and the other isn't, there's a -0.4 building separation penalty because students would have to cross campus between back-to-back classes. If they're 2 hours apart, small bonus. Same time slot, small penalty."
+
+"I also wrote a sanity test that creates a specific schedule designed to trigger multiple rule branches at once, so we can verify the math by hand. The expected score is 0.7 and the function returns exactly that."
+
+**[Show visualization.py output and the fitness plot]**
+
+"For visualization, I built the output module that prints the fitness stats table with generation-over-generation improvement percentages, the schedule in four formats — ordered by time, by activity, grouped by building, and grouped by facilitator — and the fitness line chart showing best, average, and worst scores across all generations."
+
+**[Show the fitness plot]**
+
+"Looking at the schedule the program produced — fitness of 12.4 — it's reasonable but not perfect. For example, Banks is teaching three consecutive time slots across different buildings, which isn't ideal. If I were to improve the fitness function, I'd add stronger penalties for facilitator back-to-back loads and maybe weight room fit more heavily so we don't see small classes in large rooms."
+
+"The mutation rate strategy worked well — you can see in the plot that when mutation spikes to 5% during plateaus, the worst fitness drops temporarily but it helps the average recover. The key was halving the rate after 100 generations to let the algorithm converge without overshooting."
+
+---
+
+## Notes for Recording
+
+- Discussion topics covered:
+  - (i) Challenge: room size check ordering bug and fitness reset bug — Cat or Ayan
+  - (ii) Schedule quality: Banks overloaded, some rooms underutilized — Ayan
+  - (iii) Resolving plateaus: adaptive mutation rate — Derek
+  - (iv) Improving the program: stronger facilitator load penalties, room weight — Ayan
+  - (v) Mutation rate adjustment and impact: halving strategy, plateau spikes — Derek
