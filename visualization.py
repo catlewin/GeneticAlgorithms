@@ -101,6 +101,22 @@ def print_schedule_by_facilitator(schedule):
             print(f"  │ {g.activity.name:<12} {g.time:<12} {room_str:<18}")
     print(f"\n{'═' * 72}\n")
 
+# save results to text file
+ 
+def save_results_to_file(schedule, path: str = "final_schedule.txt"):
+    TIME_ORDER = ["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM"]
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(f"Best fitness from the final generation: {schedule.fitness:.3f}\n\n")
+        f.write(f"  {'TIME':<12} {'ACTIVITY':<12} {'ROOM':<18} {'FACILITATOR':<12}\n")
+        f.write(f"{'-' * 60}\n")
+        sorted_genes = sorted(
+            schedule.genes,
+            key=lambda g: TIME_ORDER.index(g.time) if g.time in TIME_ORDER else 99
+        )
+        for g in sorted_genes:
+            room_str = f"{g.room.name} {g.room.room}"
+            f.write(f"  {g.time:<12} {g.activity.name:<12} {room_str:<18} {g.facilitator:<12}\n")
+    print(f"Results saved to {path}")
 
 # fitness plot
 
@@ -130,6 +146,7 @@ def plot_fitness(history: list[dict], save_path: str = None):
     plt.show()
 
 
+
 # entry point
 
 if __name__ == "__main__":
@@ -146,6 +163,9 @@ if __name__ == "__main__":
     print_schedule_by_activity(best)
     print_schedule_by_building(best)
     print_schedule_by_facilitator(best)
+
+  # save best schedule to text file
+    save_results_to_file(best)
 
     # show the fitness plot
     plot_fitness(history, save_path="fitness_plot.png")
