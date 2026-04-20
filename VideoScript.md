@@ -37,9 +37,9 @@
 
 **[Show terminal output with generation stats]**
 
-"Fourth, the generational loop — we run at least 100 generations. After that, if the average fitness improvement drops below 1%, we halve the mutation rate and keep going. We keep halving until the rate gets too small, then we stop. This lets the algorithm fine-tune in the later stages."
+"Fourth, the generational loop — we run at least 100 generations. During this time if the average fitness improvement stalls, we increase the mutation the mutation rate to escape the bottleneck. WHen progress becomes strong we decrease the mutation rate."
 
-"You can see in the output that fitness climbs quickly in the first 30 generations, then plateaus around 12.4. When the mutation rate jumps to 5% during plateau periods, the worst fitness drops but it helps explore new solutions."
+"You can see in the output that fitness climbs quickly in the first 30 generations, then plateaus around 11.5. When the mutation rate begins to adapt during plateau periods, the worst fitness drops but assists in exploration of new solutions."
 
 ---
 

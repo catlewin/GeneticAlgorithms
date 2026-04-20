@@ -1,15 +1,15 @@
-Best fitness from the final generation: 12.100
+Best fitness from the final generation: 13.400
 
   TIME         ACTIVITY     ROOM               FACILITATOR 
 ------------------------------------------------------------
-  10:00 AM     101 B        Loft 310           Banks       
-  11:00 AM     191 A        Loft 310           Singer      
-  11:00 AM     291          Loft 206           Banks       
-  12:00 PM     191 B        Loft 206           Banks       
-  12:00 PM     394          Slater 3           Singer      
-  1:00 PM      101 A        Loft 310           Banks       
-  1:00 PM      303          Slater 3           Zeldin      
-  2:00 PM      201          Roman 216          Singer      
-  2:00 PM      449          Slater 3           Zeldin      
-  3:00 PM      304          Beach 301          Uther       
-  3:00 PM      451          James 325          Zeldin      
+  10:00 AM     191 A        Loft 206           Shaw        
+  11:00 AM     101 A        Loft 206           Shaw        
+  11:00 AM     101 B        Loft 310           Shaw        
+  11:00 AM     201          James 325          Shaw        
+  11:00 AM     304          Slater 3           Shaw        
+  12:00 PM     191 B        Loft 310           Shaw        
+  12:00 PM     291          Loft 206           Shaw        
+  12:00 PM     449          Slater 3           Shaw        
+  12:00 PM     451          James 325          Shaw        
+  1:00 PM      303          Slater 3           Shaw        
+  3:00 PM      394          Beach 201          Singer      
